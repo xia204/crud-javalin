@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>iDATWeb</title>
+    <link rel="shortcut icon" href="/images/favicon.png">
+    <link rel="stylesheet" href="/webjars/roboto-fontface/0.10.0/css/roboto/roboto-fontface.css">
+    <link rel="stylesheet" href="/webjars/mdi__font/7.4.47/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="/webjars/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/webjars/vuetify/3.7.0/dist/vuetify.min.css">
+    <link rel="stylesheet" href="/webjars/sweetalert2/11.10.4/dist/sweetalert2.min.css">
+    <script src="/webjars/sweetalert2/11.10.4/dist/sweetalert2.min.js"></script>
+    <script src="/webjars/vue/3.5.4/dist/vue.global.prod.js"></script>
+    <script src="/webjars/vuetify/3.7.0/dist/vuetify.min.js"></script>
+    <script>
+        //const { createVuetify } = Vuetify
+        // const { es } = 'vuetify/locale'
+        // console.log(es)
+        // Create Vuetify Object
+        const vuetify = Vuetify.createVuetify({
+            theme: {
+                themes: {
+                    light: {
+                        colors: {
+                            background: '#F5F5F5',
+                            primary: '#7986CB',
+                            secondary: '#9575CD'
+                        }
+                    },
+                    dark: {
+                        colors: {
+                            background: '#000000',
+                            primary: '#7986CB',
+                            secondary: '#9575CD'
+                        }
+                    },
+                },
+            },
+        })
+        // Create Vue Object App
+        const app = Vue.createApp({})
+    </script>
+    @componentRegistration
+</head>
+
+<body>
+    <main id="main-vue" v-cloak>
+        @routeComponent
+    </main>
+    <script type="module">
+        app.use(vuetify).mount("#main-vue");
+    </script>
+</body>
+</html>
