@@ -11,6 +11,7 @@ version = "1.0.0"
 
 repositories {
     mavenCentral()
+    maven("https://jitpack.io") // Agregar este repositorio
 }
 
 dependencies {
@@ -20,7 +21,7 @@ dependencies {
 
     // https://mvnrepository.com/artifact/com.fasterxml.jackson.module/jackson-module-kotlin
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.2")
-
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.18.0-rc1")
 
     /* Vue 3, Vuetify 3 & Material Design */
     implementation("org.webjars.npm:vue:3.5.4")
@@ -28,6 +29,13 @@ dependencies {
     implementation("org.webjars.npm:mdi__font:7.4.47")
     implementation("org.webjars:font-awesome:6.5.2")
     implementation("org.webjars.npm:roboto-fontface:0.10.0")
+
+    /* Connected to database */
+    implementation("com.zaxxer:HikariCP:5.1.0") // Pool de conexiones
+    implementation("mysql:mysql-connector-java:8.0.33") // Conector de MySQL
+    implementation("com.github.seratch:kotliquery:1.9.0") // Kotlin-Query
+
+    implementation("org.webjars.npm:sweetalert2:11.11.1")
 }
 
 kotlin {

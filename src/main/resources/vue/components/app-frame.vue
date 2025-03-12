@@ -54,7 +54,7 @@ app.component("app-frame", {
     userImg: 'images/avatar.jpg',
     menu: [
         {icon: 'mdi-form-select', text: 'Fomrulario', href: 'form'},
-        {icon: 'mdi-account-tie', text: 'Empleados', href: 'crud'},
+        {icon: 'mdi-account-tie', text: 'Empleados', href: '/empleados'},
         {icon: 'mdi-delete', text: 'Trash', href: '/'},
         {icon: 'mdi-alert-octagon', text: 'Spam', href: "/"},
       ],
