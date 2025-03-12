@@ -8,11 +8,11 @@ import java.util.concurrent.CompletableFuture
 
 object EmpleadosController: CrudHandler {
     override fun create(ctx: Context) {
-        ctx.bodyValidator<Empleado>().get().apply {
-            id = UUID.randomUUID().toString().uppercase()
-        }.also { empleado: Empleado ->
-            ctx.future { CompletableFuture.supplyAsync { EmpleadosService.insert(empleado) }
-                .thenAccept(ctx::result)
+        ctx.bodyValidator<Empleado>().get().also { empleado ->
+            empleado.id = null
+            ctx.future {
+                CompletableFuture.supplyAsync { EmpleadosService.insert(empleado) }
+                    .thenAccept(ctx::result)
             }
         }
     }

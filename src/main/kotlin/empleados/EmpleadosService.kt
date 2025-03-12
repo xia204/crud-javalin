@@ -7,7 +7,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 
 data class Empleado(
-    var id: String,
+    var id: Int? = null,
     var nombre: String,
     var apellido_paterno: String,
     var apellido_materno: String,
@@ -19,7 +19,7 @@ data class Empleado(
 object EmpleadosService {
 
     private fun rowToEmpleados(row: Row) = Empleado(
-        id = row.string("id"),
+        id = row.int("id"),
         nombre = row.string("nombre"),
         apellido_paterno = row.string("apellido_paterno"),
         apellido_materno = row.string("apellido_materno"),
@@ -75,13 +75,18 @@ object EmpleadosService {
             empleado.contraseña
         )
 
-        var result = "failed"
-        sessionOf(HikariCP.dataSource()).use { conn ->
-            result = if (conn.run(qry.asUpdate) > 0) empleado.id
-            else throw InternalServerErrorResponse("No se puede insertar en la base de datos")
+        val getIdQry = queryOf("SELECT LAST_INSERT_ID()").map { row -> row.int(1) }.asSingle
+
+        val result = sessionOf(HikariCP.dataSource()).use { conn ->
+            conn.transaction { tx ->
+                tx.run(qry.asUpdate)  // Inserta el empleado
+                tx.run(getIdQry) ?: throw InternalServerErrorResponse("No se pudo obtener el ID")
+            }
         }
+
         return """{"id": "$result"}"""
     }
+
 
     //Función para eliminar
     fun delete(id: String): String {

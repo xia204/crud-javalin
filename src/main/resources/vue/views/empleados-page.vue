@@ -54,8 +54,11 @@
                                             </v-col>
                                             <v-col cols="12">
                                                 <v-text-field v-model="empleados.editedItem.contraseña"
-                                                    :error-messages="empleados.errors.contraseña" type="password"
-                                                    label="Contraseña"></v-text-field>
+                                                    :type="showPassword ? 'text' : 'password'"
+                                                    :error-messages="empleados.errors.contraseña" label="Contraseña"
+                                                    append-inner-icon="mdi-eye-off"
+                                                    @click:append-inner="showPassword = !showPassword">
+                                                </v-text-field>
                                             </v-col>
                                         </v-row>
                                     </v-container>
@@ -98,6 +101,7 @@ app.component("empleados-page", {
     template: "#empleados-page",
     data: () => ({
         search: "",
+        showPassword: false,
         empleados: {
             dialog: false,
             dialogDelete: false,
@@ -133,30 +137,31 @@ app.component("empleados-page", {
     methods: {
 
         validate() {
-            this.empleados.errors = {}; // Asegurarse de limpiar errores
-            const item = this.empleados.editedItem; // Para facilitar el acceso
+            this.empleados.errors = {}; // Limpiar errores
+            const item = this.empleados.editedItem; // Acceso rápido a los datos
 
-            if (!item.nombre || item.nombre.length < 3 || !/^[a-zA-Z]+$/.test(item.nombre)) {
-                this.empleados.errors.nombre = "El nombre debe tener al menos 3 caracteres y solo contener letras.";
+            if (!item.nombre || item.nombre.trim().length < 3 || !/^[a-zA-Z]+$/.test(item.nombre.trim())) {
+                this.empleados.errors.nombre = "El nombre debe tener al menos 3 caracteres y no contener espacios vacíos.";
             }
-            if (!item.apellido_paterno || item.apellido_paterno.length < 3 || !/^[a-zA-Z]+$/.test(item.apellido_paterno)) {
-                this.empleados.errors.apellido_paterno = "El apellido debe tener al menos 3 caracteres y solo contener letras.";
+            if (!item.apellido_paterno || item.apellido_paterno.trim().length < 3 || !/^[a-zA-Z]+$/.test(item.apellido_paterno.trim())) {
+                this.empleados.errors.apellido_paterno = "El apellido debe tener al menos 3 caracteres y no contener espacios vacíos.";
             }
-            if (!item.apellido_materno || item.apellido_materno.length < 3 || !/^[a-zA-Z]+$/.test(item.apellido_materno)) {
-                this.empleados.errors.apellido_materno = "El apellido debe tener al menos 3 caracteres y solo contener letras.";
+            if (!item.apellido_materno || item.apellido_materno.trim().length < 3 || !/^[a-zA-Z]+$/.test(item.apellido_materno.trim())) {
+                this.empleados.errors.apellido_materno = "El apellido debe tener al menos 3 caracteres y no contener espacios vacíos.";
             }
-            if (!item.nombre_usuario || item.nombre_usuario.length < 3 || !/^[a-zA-Z]+$/.test(item.nombre_usuario)) {
-                this.empleados.errors.nombre_usuario = "El nombre de usuario debe tener al menos 3 caracteres y solo contener letras.";
+            if (!item.nombre_usuario || item.nombre_usuario.trim().length < 3 || !/^[a-zA-Z]+$/.test(item.nombre_usuario.trim())) {
+                this.empleados.errors.nombre_usuario = "El nombre de usuario debe tener al menos 3 caracteres y no contener espacios vacíos.";
             }
-            if (!item.correo_empresarial || !/^[a-z0-9.-]+@[a-z0-9.-]+\.[a-z]+$/i.test(item.correo_empresarial)) {
+            if (!item.correo_empresarial || !/^[a-z0-9.-]+@[a-z0-9.-]+\.[a-z]+$/i.test(item.correo_empresarial.trim())) {
                 this.empleados.errors.correo_empresarial = "El correo ingresado no es válido.";
             }
-            if (!item.contraseña || item.contraseña.length < 6) {
-                this.empleados.errors.contraseña = "La contraseña debe tener al menos 6 caracteres.";
+            if (!item.contraseña || item.contraseña.trim().length < 6) {
+                this.empleados.errors.contraseña = "La contraseña debe tener al menos 6 caracteres y no contener solo espacios.";
             }
 
             return Object.keys(this.empleados.errors).length === 0;
         },
+
 
         initialize() {
             fetch('/api/empleados')
@@ -232,22 +237,30 @@ app.component("empleados-page", {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(empleados)
             })
-                .then(response => {
-                    if (response == 'success') {
-                        return response.text().then(err => { throw new Error(err) });
+                .then(response => response.text()) // Primero obtenemos la respuesta como texto
+                .then(text => {
+                    try {
+                        // Intentamos parsear la respuesta como JSON
+                        const data = JSON.parse(text);
+                        if (data.id) {
+                            console.log("Empleado guardado con ID:", data.id);
+                            this.initialize(); // Recargar lista de empleados
+                            this.close();
+                            return;
+                        }
+                    } catch (e) {
+                        // Si falla el JSON.parse, significa que la respuesta fue texto plano
+                        if (text.trim() === "success") {
+                            console.log("Empleado editado correctamente");
+                            this.empleados.items = this.empleados.items.map(item =>
+                                item.id === empleados.id ? empleados : item);
+                            this.close();
+                            return;
+                        }
                     }
-                    return response.text();
+                    throw new Error("Respuesta inesperada del servidor: " + text);
                 })
-                .then(data => {
-                    if (edicion) {
-                        Object.assign(this.empleados.items[this.empleados.editedIndex], data);
-                        //this.empleados.items.splice(this.empleados.editedIndex, 1, data);
-                        //this.initialize();
-                    } else {
-                        this.empleados.items.push(data);
-                    }
-                    this.close();
-                })
+
                 .catch(error => console.error("Error al guardar empleado:", error.message));
         },
 
