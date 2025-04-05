@@ -6,14 +6,26 @@ import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.http.staticfiles.Location
 import io.javalin.vue.VueComponent
 import kotliquery.HikariCP
+import mx.edu.uttt.auth.AccessManager
+import mx.edu.uttt.auth.AccessManager.userInfo
+import mx.edu.uttt.auth.LoginController
+import mx.edu.uttt.auth.Perfil
+import mx.edu.uttt.auth.accounts.UsserAccountController
 import mx.edu.uttt.empleados.EmpleadosController
 import mx.edu.uttt.empleados.EmpleadosService
 
 fun main() {
     HikariCP.default(
-        "jdbc:mysql://database-1.cj8syu8iitpc.us-east-2.rds.amazonaws.com:3306/crudjavalin?serverTimezone=UTC&useSSL=false",
-        "admin",
-        "Axcvp.2031"
+        //AWS
+
+        //"jdbc:mysql://database-1.cj8syu8iitpc.us-east-2.rds.amazonaws.com:3306/crudjavalin?serverTimezone=UTC&useSSL=false",
+        //"admin",
+        //"Axcvp.2031"
+
+        //loacal
+        "jdbc:mysql://localhost:3306/crudjavalin?serverTimezone=UTC&useSSL=false",
+        "root",
+        "12345678"
     )
     println(EmpleadosService.selectAll())
 
@@ -26,21 +38,28 @@ fun main() {
         config.vue.apply {
             vueInstanceNameInJs = "app"
             rootDirectory("/vue", Location.CLASSPATH)
+            stateFunction = { ctx -> mapOf("userInfo" to ctx.userInfo) }
         }
         //
         config.router.mount {
+            it.beforeMatched(AccessManager::handleAccess)
         //montar la session
         }.apiBuilder {
-            get("/", VueComponent("home-page"))
-            get("empleados", VueComponent("empleados-page"))
-            get("form", VueComponent("form-page"))
+            get("login",VueComponent("login-page"), Perfil.UNAUTHENTICATED)
+            get("/", VueComponent("home-page"), Perfil.ADMINISTRADOR)
+            get("empleados", VueComponent("empleados-page"), Perfil.ADMINISTRADOR,Perfil.GERENTE)
+            get("form", VueComponent("form-page"), Perfil.ADMINISTRADOR,Perfil.GERENTE)
             //RestFull API End Points
             path("api"){
+                post("login", LoginController::signIn, Perfil.UNAUTHENTICATED)
+                post("logout", LoginController::signOut, Perfil.UNAUTHENTICATED)
+
                 crud("empleados/{id}", EmpleadosController)
+                crud("usuarios/{id}", UsserAccountController)
             }
         }
     //Este .start() sirve de forma local
-    //}.start()
+    }.start()
     //volver esta linea a la normalidad para subir a AWS
-    }.start("0.0.0.0", 8080)
+    //}.start("0.0.0.0", 8080)
 }

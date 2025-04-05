@@ -30,12 +30,13 @@ dependencies {
     implementation("org.webjars:font-awesome:6.5.2")
     implementation("org.webjars.npm:roboto-fontface:0.10.0")
 
+    implementation("org.webjars.npm:sweetalert2:11.14.3")
+
     /* Connected to database */
     implementation("com.zaxxer:HikariCP:5.1.0") // Pool de conexiones
     implementation("mysql:mysql-connector-java:8.0.33") // Conector de MySQL
     implementation("com.github.seratch:kotliquery:1.9.0") // Kotlin-Query
-
-    implementation("org.webjars.npm:sweetalert2:11.11.1")
+    implementation("org.mindrot:jbcrypt:0.4")
 }
 
 kotlin {
