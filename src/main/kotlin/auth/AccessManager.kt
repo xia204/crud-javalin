@@ -67,6 +67,7 @@ object AccessManager {
     /* Clase que representa los permisos de un módulo */
     data class ModuloPermisos(
         val nombreModulo: String,
+        val urlModulo: String,
         val puedeAgregar: Boolean,
         val puedeEditar: Boolean,
         val puedeEliminar: Boolean,

@@ -27,12 +27,19 @@ object UsserAccountController : CrudHandler {
     }
 
     override fun getAll(ctx: Context) {
-        val usuarios = if (ctx.userInfo!!.perfil != ADMINISTRADOR) {
+        val usuariosBase = if (ctx.userInfo!!.perfil != ADMINISTRADOR) {
             UserAccountService.selectAll().filter { it.nombreUsuario != "sys.admin" }
         } else {
             UserAccountService.selectAll()
         }
-        ctx.json(usuarios)
+
+        val usuariosConPermisos = usuariosBase.map { usuario ->
+            usuario.copy(
+                permisos = UserAccountService.getUserPermissions(usuario.id ?: 0)
+            )
+        }
+
+        ctx.json(usuariosConPermisos)
     }
 
     override fun getOne(ctx: Context, resourceId: String) {

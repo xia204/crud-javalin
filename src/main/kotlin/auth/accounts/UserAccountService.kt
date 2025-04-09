@@ -34,21 +34,24 @@ object UserAccountService {
     fun selectAll(): List<UserAccount> {
         val qry = queryOf(
             """
-            SELECT u.id, u.nombreUsuario, p.nombrePerfil
-            FROM usuarios u
-            JOIN perfiles p ON u.perfil_id = p.id
-            ORDER BY u.nombreUsuario
-            """.trimIndent()
+        SELECT u.id, u.nombreUsuario, p.nombrePerfil
+        FROM usuarios u
+        JOIN perfiles p ON u.perfil_id = p.id
+        ORDER BY u.nombreUsuario
+        """.trimIndent()
         ).map { row ->
+            val id = row.int("id")
             UserAccount(
-                id = row.int("id"),
+                id = id,
                 nombreUsuario = row.string("nombreUsuario"),
-                perfil = mapPerfil(row.string("nombrePerfil"))
+                perfil = mapPerfil(row.string("nombrePerfil")),
+                permisos = getUserPermissions(id) // ← AQUI AGREGAS LOS PERMISOS
             )
         }.asList
 
         return sessionOf(HikariCP.dataSource()).use { it.run(qry) }
     }
+
 
     fun selectById(id: Int): UserAccount {
         val qry = queryOf(
@@ -74,7 +77,7 @@ object UserAccountService {
     fun getUserPermissions(userId: Int): List<ModuloPermisos> {
         val qry = queryOf(
             """
-            SELECT m.nombreModulo, pm.bitAgregar, pm.bitEditar, pm.bitEliminar, 
+            SELECT m.nombreModulo, m.url, pm.bitAgregar, pm.bitEditar, pm.bitEliminar, 
                    pm.bitConsultar, pm.bitExportar, pm.bitBitacora
             FROM perilModulo pm
             JOIN modulos m ON pm.modulo_id = m.id
@@ -84,6 +87,7 @@ object UserAccountService {
         ).map { row ->
             ModuloPermisos(
                 nombreModulo = row.string("nombreModulo"),
+                urlModulo = row.string("url"),
                 puedeAgregar = row.boolean("bitAgregar"),
                 puedeEditar = row.boolean("bitEditar"),
                 puedeEliminar = row.boolean("bitEliminar"),

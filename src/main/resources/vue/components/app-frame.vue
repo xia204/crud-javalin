@@ -2,38 +2,52 @@
   <v-app id="inspire">
     <v-navigation-drawer v-model="drawer" width="280">
       <v-sheet class="pa-4" color="grey-lighten-4">
-        <v-avatar :image="userImg" class="mb-8" color="grey-darken-1" size="64"></v-avatar>
-        <div>Gerente de Ventas</div>
+
+        <v-row class="d-flex align-center justify-center">
+          <!-- Avatar -->
+          <v-col class="text-center" cols="auto">
+            <v-avatar :image="userImg" class="mb-8" color="grey-darken-1" size="64"></v-avatar>
+          </v-col>
+          
+          <!-- Información de nombre y perfil -->
+          <v-col class="text-center" cols="auto">
+            <v-list-item-content>
+              <v-list-item-title class="text-h6">{{ $javalin.state.userInfo.nombreUsuario }}</v-list-item-title>
+              <v-list-item-subtitle class="text-lowercase">{{ $javalin.state.userInfo.perfil }}</v-list-item-subtitle>
+            </v-list-item-content>
+          </v-col>
+        </v-row>
       </v-sheet>
 
       <v-divider></v-divider>
 
-      <v-list v-model:opened="open">
-        <!-- Nivel 1: Opciones principales -->
-        <v-list-item prepend-icon="mdi-form-select" title="Formulario" to="/form"></v-list-item>
-        <v-list-item prepend-icon="mdi-account-tie" title="Empleados" to="/empleados"></v-list-item>
+      <v-list>
+        <template v-for="item in filteredMenu">
+          <v-list-item v-if="!item.submenu" :key="item.text" :prepend-icon="item.icon" :title="item.text"
+            :href="item.href"></v-list-item>
 
-        <!-- Nivel 1: Personas (con submenús) -->
-        <v-list-group value="Personas">
-          <template v-slot:activator="{ props }">
-            <v-list-item v-bind="props" prepend-icon="mdi-account-group" title="Personas"></v-list-item>
-          </template>
-
-          <!-- Nivel 2: Clientes -->
-          <v-list-group value="Clientes">
+          <v-list-group v-else :key="item.text + '-group'" :value="item.text">
             <template v-slot:activator="{ props }">
-              <v-list-item v-bind="props" prepend-icon="mdi-account" title="Clientes"></v-list-item>
+              <v-list-item v-bind="props" :prepend-icon="item.icon" :title="item.text" />
             </template>
 
-            <!-- Nivel 3: Persona y Empresa -->
-            <v-list-item prepend-icon="mdi-human" title="Persona" to="/clientes/persona"></v-list-item>
-            <v-list-item prepend-icon="mdi-domain" title="Empresa" to="/clientes/empresa"></v-list-item>
-          </v-list-group>
+            <!-- Subniveles -->
+            <template v-for="sub in item.submenu">
+              <v-list-group v-if="sub.submenu" :key="sub.text" :value="sub.text">
+                <template v-slot:activator="{ props }">
+                  <v-list-item v-bind="props" :prepend-icon="sub.icon" :title="sub.text" />
+                </template>
 
-          <!-- Nivel 2: Proveedores -->
-          <v-list-item prepend-icon="mdi-truck" title="Proveedores" to="/proveedores"></v-list-item>
-        </v-list-group>
+                <v-list-item v-for="final in sub.submenu" :key="final.text" :prepend-icon="final.icon"
+                  :title="final.text" :href="final.href" />
+              </v-list-group>
+
+              <v-list-item v-else :key="sub.text + '-else'" :prepend-icon="sub.icon" :title="sub.text" :href="sub.href" />
+            </template>
+          </v-list-group>
+        </template>
       </v-list>
+
     </v-navigation-drawer>
 
     <v-app-bar>
@@ -58,12 +72,54 @@ app.component("app-frame", {
     drawer: null,
     userImg: 'images/avatar.jpg',
     open: [],
-    menu: [
-      { icon: 'mdi-form-select', text: 'Formulario', href: '/form' },
-      { icon: 'mdi-account-tie', text: 'Empleados', href: '/empleados' },
+    menu: []
+  }),
+  computed: {
+    // Filtrar el menú según el perfil del usuario
+    filteredMenu() {
+      const perfil = this.$javalin?.state?.userInfo?.perfil;
+
+      // Filtra los items del menú según el perfil
+      return this.menu.filter(item => {
+        if (!item.perfiles) return false;  // Si no tiene perfiles definidos, es accesible a todos
+        return item.perfiles.includes(perfil);
+      });
+    }
+  },
+  created() {
+
+    // Construcción dinámica del menú
+    this.menu = [
+      // Menú accesible por ADMINISTRADOR o GERENTE
+      {
+        icon: 'mdi-form-select',
+        text: 'Formulario',
+        href: '/form',
+        perfiles: ['GERENTE']  // Solo accesible para ADMINISTRADOR y GERENTE
+      },
+      {
+        icon: 'mdi-account-tie',
+        text: 'Empleados',
+        href: '/empleados',
+        perfiles: ['ADMINISTRADOR']  // Solo ADMINISTRADOR puede ver este menú
+      },
+      {
+        icon: 'mdi-cash-register',
+        text: 'Ventas',
+        href: '/ventas',
+        perfiles: ['ADMINISTRADOR', 'GERENTE']  // Solo ADMINISTRADOR puede ver este menú
+      },
+      {
+        icon: 'mdi-cash-register',
+        text: 'Compras',
+        href: '/compras',
+        perfiles: ['ADMINISTRADOR', 'GERENTE']  // Solo ADMINISTRADOR puede ver este menú
+      },
+      // Menú de 'Personas' para todos los perfiles
       {
         icon: 'mdi-account-group',
         text: 'Personas',
+        perfiles: ['ADMINISTRADOR'],  // Solo ADMINISTRADOR y GERENTE pueden ver este menú
         submenu: [
           {
             text: 'Clientes',
@@ -73,10 +129,36 @@ app.component("app-frame", {
               { icon: 'mdi-domain', text: 'Empresa', href: '/clientes/empresa' }
             ]
           },
-          { icon: 'mdi-truck', text: 'Proveedores', href: '/proveedores' }
+          {
+            text: 'Proveedores',
+            icon: 'mdi-truck',
+            href: '/proveedores',
+            perfiles: ['ADMINISTRADOR']  // Solo ADMINISTRADOR puede ver este menú
+          }
         ]
-      }
-    ]
-  }),
+      },
+      {
+        icon: 'mdi-chart-line',
+        text: 'Logistica',
+        //perfiles: ['ADMINISTRADOR', 'GERENTE'],  // Solo ADMINISTRADOR y GERENTE pueden ver este menú
+        submenu: [
+          {
+            text: 'Entregas',
+            icon: 'mdi-truck-fast',
+            perfiles: ['GERENTE'],  // Solo ADMINISTRADOR y GERENTE pueden ver este menú
+            submenu: [
+              { icon: 'mdi-domain', text: 'Rutas', href: '/entregas' }
+            ]
+          },
+          {
+            text: 'Embarques',
+            icon: 'mdi-truck-delivery',
+            href: '/proveedores',
+            perfiles: ['ADMINISTRADOR']  // Solo ADMINISTRADOR puede ver este menú
+          }
+        ]
+      },
+    ];
+  }
 });
 </script>

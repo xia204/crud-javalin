@@ -10,6 +10,7 @@ import mx.edu.uttt.auth.AccessManager
 import mx.edu.uttt.auth.AccessManager.userInfo
 import mx.edu.uttt.auth.LoginController
 import mx.edu.uttt.auth.Perfil
+import mx.edu.uttt.auth.accounts.UserAccountService
 import mx.edu.uttt.auth.accounts.UsserAccountController
 import mx.edu.uttt.empleados.EmpleadosController
 import mx.edu.uttt.empleados.EmpleadosService
@@ -28,6 +29,7 @@ fun main() {
         "12345678"
     )
     println(EmpleadosService.selectAll())
+    println(UserAccountService.selectAll())
 
     val app = Javalin.create { config ->
         config.staticFiles.apply {
@@ -38,7 +40,8 @@ fun main() {
         config.vue.apply {
             vueInstanceNameInJs = "app"
             rootDirectory("/vue", Location.CLASSPATH)
-            stateFunction = { ctx -> mapOf("userInfo" to ctx.userInfo) }
+            stateFunction = { ctx -> println("  userInfo en stateFunction: ${ctx.userInfo}")
+                mapOf("userInfo" to ctx.userInfo) }
         }
         //
         config.router.mount {
@@ -46,9 +49,10 @@ fun main() {
         //montar la session
         }.apiBuilder {
             get("login",VueComponent("login-page"), Perfil.UNAUTHENTICATED)
-            get("/", VueComponent("home-page"), Perfil.ADMINISTRADOR)
+            get("/", VueComponent("home-page"), Perfil.ADMINISTRADOR, Perfil.GERENTE)
             get("empleados", VueComponent("empleados-page"), Perfil.ADMINISTRADOR,Perfil.GERENTE)
-            get("form", VueComponent("form-page"), Perfil.ADMINISTRADOR,Perfil.GERENTE)
+            get("form", VueComponent("form-page"), Perfil.ADMINISTRADOR)
+            get("proveedores", VueComponent("proveedores-page"), Perfil.ADMINISTRADOR)
             //RestFull API End Points
             path("api"){
                 post("login", LoginController::signIn, Perfil.UNAUTHENTICATED)
