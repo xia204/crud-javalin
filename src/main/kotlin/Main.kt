@@ -14,6 +14,8 @@ import mx.edu.uttt.auth.accounts.UserAccountService
 import mx.edu.uttt.auth.accounts.UsserAccountController
 import mx.edu.uttt.empleados.EmpleadosController
 import mx.edu.uttt.empleados.EmpleadosService
+import mx.edu.uttt.routes.RutaModulo
+import mx.edu.uttt.routes.RutaModuloService.getRoutesByPerfil
 
 fun main() {
     HikariCP.default(
@@ -50,9 +52,15 @@ fun main() {
         }.apiBuilder {
             get("login",VueComponent("login-page"), Perfil.UNAUTHENTICATED)
             get("/", VueComponent("home-page"), Perfil.ADMINISTRADOR, Perfil.GERENTE)
-            get("empleados", VueComponent("empleados-page"), Perfil.ADMINISTRADOR,Perfil.GERENTE)
-            get("form", VueComponent("form-page"), Perfil.ADMINISTRADOR)
-            get("proveedores", VueComponent("proveedores-page"), Perfil.ADMINISTRADOR)
+//            get("empleados", VueComponent("empleados-page"), Perfil.ADMINISTRADOR,Perfil.GERENTE)
+//            get("form", VueComponent("form-page"), Perfil.ADMINISTRADOR)
+//            get("proveedores", VueComponent("proveedores-page"), Perfil.ADMINISTRADOR)
+
+            //Rutas dinamicas
+            getRoutesByPerfil().forEach { ruta ->
+                get(ruta.path, VueComponent(ruta.vueComponent), *ruta.perfiles.toTypedArray())
+            }
+
             //RestFull API End Points
             path("api"){
                 post("login", LoginController::signIn, Perfil.UNAUTHENTICATED)
